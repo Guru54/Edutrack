@@ -11,38 +11,92 @@ const { proposalApprovedEmail, proposalRejectedEmail } = require('../utils/email
 // @access  Private (Student)
 const createProject = async (req, res, next) => {
   try {
-    const { title, description, groupId, projectType, technologyStack, objectives, academicYear, semester } = req.body;
+    const { 
+      title, 
+      description, 
+      groupId, 
+      projectType, 
+      technologyStack, 
+      objectives, 
+      academicYear, 
+      semester,
+      guideId,
+      expectedOutcomes
+    } = req.body;
 
-    // Verify group exists and user is part of it
-    const group = await Group.findById(groupId);
-    if (!group) {
-      return res.status(404).json({ message: 'Group not found' });
-    }
+    // If groupId is provided, verify group exists and user is part of it
+    if (groupId) {
+      const group = await Group.findById(groupId);
+      if (!group) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
 
-    const isMember = group.members.some(member => member.studentId.toString() === req.user.id);
-    if (!isMember) {
-      return res.status(403).json({ message: 'You are not a member of this group' });
+      const isMember = group.members.some(member => member.studentId.toString() === req.user.id);
+      if (!isMember) {
+        return res.status(403).json({ message: 'You are not a member of this group' });
+      }
+    } else {
+      // If no groupId, try to find user's group
+      const group = await Group.findOne({
+        'members.studentId': req.user.id
+      });
+      
+      if (group) {
+        req.body.groupId = group._id;
+      }
     }
 
     // Check for duplicates
     const duplicateCheck = await detectDuplicates(title, description);
     
+    // Parse technologyStack if it's a string
+    let techStack = technologyStack;
+    if (typeof technologyStack === 'string') {
+      techStack = technologyStack.split(',').map(t => t.trim());
+    }
+    
     // Create project
     const project = await Project.create({
       title,
       description,
-      groupId,
-      projectType,
-      technologyStack,
+      groupId: req.body.groupId || null,
+      projectType: projectType.toLowerCase(), // Convert to lowercase for enum
+      technologyStack: techStack,
       objectives,
       academicYear,
       semester,
-      status: 'proposed'
+      guideId: guideId || null,
+      expectedOutcomes: expectedOutcomes || null,
+      status: 'proposed',
+      submissionDate: new Date()
     });
 
+    // Create file record if uploaded
+    if (req.file) {
+      const File = require('../models/File');
+      await File.create({
+        uploadedBy: req.user.id,
+        fileName: req.file.filename,
+        filePath: req.file.path,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        projectId: project._id
+      });
+    }
+
+    // Send notification to guide if assigned
+    if (guideId) {
+      await Notification.create({
+        userId: guideId,
+        message: `New project proposal "${title}" submitted by ${req.user.fullName}`,
+        type: 'info'
+      });
+    }
+
     res.status(201).json({
+      success: true,
       message: 'Project proposal created successfully',
-      project,
+      data: project,
       duplicateWarning: duplicateCheck.isDuplicate ? {
         message: 'Similar projects found',
         similarProjects: duplicateCheck.similarProjects

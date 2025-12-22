@@ -50,7 +50,13 @@ export const authAPI = {
 export const projectAPI = {
   getAll: (params) => api.get('/projects', { params }),
   getById: (id) => api.get(`/projects/${id}`),
-  create: (data) => api.post('/projects', data),
+  create: (data) => {
+    // Handle both FormData and regular objects
+    const headers = data instanceof FormData 
+      ? { 'Content-Type': 'multipart/form-data' } 
+      : { 'Content-Type': 'application/json' };
+    return api.post('/projects', data, { headers });
+  },
   update: (id, data) => api.put(`/projects/${id}`, data),
   delete: (id) => api.delete(`/projects/${id}`),
   approve: (id) => api.post(`/projects/${id}/approve`),
@@ -75,7 +81,8 @@ export const userAPI = {
   getById: (id) => api.get(`/users/${id}`),
   update: (id, data) => api.put(`/users/${id}`, data),
   verify: (id) => api.put(`/users/${id}/verify`),
-  getUserGroups: (id) => api.get(`/users/${id}/groups`)
+  getUserGroups: (id) => api.get(`/users/${id}/groups`),
+  getGuides: () => api.get('/guides')
 };
 
 // Group API

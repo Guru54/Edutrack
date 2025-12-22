@@ -8,6 +8,7 @@ import Notification from './components/common/Notification';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import StudentDashboard from './pages/Student/Dashboard';
+import NewProposal from './pages/Student/NewProposal';
 import FacultyDashboard from './pages/Faculty/Dashboard';
 import AdminDashboard from './pages/Admin/Dashboard';
 import './App.css';
@@ -87,10 +88,7 @@ function App() {
             } />
             <Route path="/student/new-proposal" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <div className="page-placeholder">
-                  <h1>New Project Proposal</h1>
-                  <p>Project proposal form - To be implemented</p>
-                </div>
+                <NewProposal />
               </ProtectedRoute>
             } />
             <Route path="/student/groups" element={

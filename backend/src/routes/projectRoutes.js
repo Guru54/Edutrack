@@ -13,13 +13,19 @@ const {
 const { protect } = require('../middleware/auth');
 const authorize = require('../middleware/roleCheck');
 const { projectValidation, validate } = require('../utils/validators');
+const { uploadProposal } = require('../middleware/upload');
 
 // Duplicate check route (before :id routes to avoid conflict)
 router.get('/duplicates', protect, checkDuplicates);
 
 router.route('/')
   .get(protect, getProjects)
-  .post(protect, authorize('student'), projectValidation, validate, createProject);
+  .post(
+    protect, 
+    authorize('student'), 
+    uploadProposal.single('proposalDocument'),
+    createProject
+  );
 
 router.route('/:id')
   .get(protect, getProject)

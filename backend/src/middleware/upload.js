@@ -9,8 +9,8 @@ const ensureUploadDir = (dir) => {
   }
 };
 
-// Configure storage
-const storage = multer.diskStorage({
+// Configure storage for project files
+const projectStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadPath = process.env.UPLOAD_PATH || './uploads';
     const projectId = req.params.id || 'general';
@@ -22,6 +22,21 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     cb(null, uniqueSuffix + '-' + file.originalname);
+  }
+});
+
+// Configure storage for proposals
+const proposalStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadPath = process.env.UPLOAD_PATH || './uploads';
+    const fullPath = path.join(uploadPath, 'proposals');
+    
+    ensureUploadDir(fullPath);
+    cb(null, fullPath);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'proposal-' + uniqueSuffix + path.extname(file.originalname));
   }
 });
 
@@ -38,13 +53,24 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer upload instance
-const upload = multer({
-  storage: storage,
+// Create multer upload instances
+const uploadProject = multer({
+  storage: projectStorage,
   limits: {
     fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760 // 10MB default
   },
   fileFilter: fileFilter
 });
 
-module.exports = upload;
+const uploadProposal = multer({
+  storage: proposalStorage,
+  limits: {
+    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 10485760 // 10MB default
+  },
+  fileFilter: fileFilter
+});
+
+module.exports = {
+  uploadProject,
+  uploadProposal
+};

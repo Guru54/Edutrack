@@ -8,7 +8,8 @@ const {
   createGroup,
   getGroup,
   updateGroup,
-  getUserGroups
+  getUserGroups,
+  getGuides
 } = require('../controllers/userController');
 const { protect } = require('../middleware/auth');
 const authorize = require('../middleware/roleCheck');
@@ -24,5 +25,8 @@ router.get('/users/:id/groups', protect, getUserGroups);
 router.post('/groups', protect, authorize('student'), createGroup);
 router.get('/groups/:id', protect, getGroup);
 router.put('/groups/:id', protect, updateGroup);
+
+// Guides route
+router.get('/guides', protect, getGuides);
 
 module.exports = router;
