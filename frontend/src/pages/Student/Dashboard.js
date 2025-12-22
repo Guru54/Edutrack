@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { projectAPI, milestoneAPI } from '../../../services/api';
-import { useNotification } from '../../../contexts/NotificationContext';
-import Loading from '../../../components/common/Loading';
-import { formatDate, getStatusColor, getStatusLabel } from '../../../utils/helpers';
+import React, { useState, useEffect, useCallback } from 'react';
+import { projectAPI } from '../../services/api';
+import { useNotification } from '../../contexts/NotificationContext';
+import Loading from '../../components/common/Loading';
+import { formatDate, getStatusColor, getStatusLabel } from '../../utils/helpers';
 import './Dashboard.css';
 
 const StudentDashboard = () => {
@@ -11,11 +11,7 @@ const StudentDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { showError } = useNotification();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       const projectsRes = await projectAPI.getAll();
       const projectsData = projectsRes.data.projects || [];
@@ -34,7 +30,11 @@ const StudentDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   if (loading) return <Loading message="Loading dashboard..." />;
 

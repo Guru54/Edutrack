@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { analyticsAPI } from '../../../services/api';
-import { useNotification } from '../../../contexts/NotificationContext';
-import Loading from '../../../components/common/Loading';
+import React, { useState, useEffect, useCallback } from 'react';
+import { analyticsAPI } from '../../services/api';
+import { useNotification } from '../../contexts/NotificationContext';
+import Loading from '../../components/common/Loading';
 import '../Student/Dashboard.css';
 
 const AdminDashboard = () => {
@@ -9,11 +9,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const { showError } = useNotification();
 
-  useEffect(() => {
-    fetchAnalytics();
-  }, []);
-
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = useCallback(async () => {
     try {
       const response = await analyticsAPI.getDashboard();
       setAnalytics(response.data);
@@ -22,7 +18,11 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   if (loading) return <Loading message="Loading analytics..." />;
 

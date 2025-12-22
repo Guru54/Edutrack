@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
-import { useNotification } from '../../../contexts/NotificationContext';
-import { validateEmail } from '../../../utils/validators';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNotification } from '../../contexts/NotificationContext';
+import { validateEmail } from '../../utils/validators';
 import './Auth.css';
 
 const Login = () => {

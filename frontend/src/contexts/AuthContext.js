@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { authAPI } from '../services/api';
 
 const AuthContext = createContext();
@@ -16,6 +16,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    authAPI.logout().catch(err => console.error('Logout error:', err));
+  }, []);
+
+  const verifyToken = useCallback(async () => {
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data.user);
+    } catch (err) {
+      console.error('Token verification failed:', err);
+      logout();
+    } finally {
+      setLoading(false);
+    }
+  }, [logout]);
+
   useEffect(() => {
     // Check if user is logged in on mount
     const token = localStorage.getItem('token');
@@ -28,19 +47,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-  }, []);
-
-  const verifyToken = async () => {
-    try {
-      const response = await authAPI.getMe();
-      setUser(response.data.user);
-    } catch (err) {
-      console.error('Token verification failed:', err);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [verifyToken]);
 
   const login = async (email, password) => {
     try {
@@ -76,13 +83,6 @@ export const AuthProvider = ({ children }) => {
       setError(message);
       return { success: false, error: message };
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    authAPI.logout().catch(err => console.error('Logout error:', err));
   };
 
   const updateUser = (updatedUser) => {
