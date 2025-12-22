@@ -42,6 +42,10 @@ groupSchema.pre('save', function(next) {
   if (this.members.length < 1 || this.members.length > 4) {
     return next(new Error('Group must have 1-4 members'));
   }
+  const leaderCount = this.members.filter(member => member.role === 'leader').length;
+  if (leaderCount !== 1) {
+    return next(new Error('Group must have exactly one leader'));
+  }
   next();
 });
 

@@ -99,7 +99,10 @@ export default function MyGroups() {
             >
               <div className="mb-4 grid gap-2">
                 {group.members?.map((member) => (
-                  <MemberAvatar key={member.studentId} member={member} />
+                  <MemberAvatar
+                    key={member.studentId?._id || member.studentId}
+                    member={member}
+                  />
                 ))}
               </div>
               <div className="flex justify-end">

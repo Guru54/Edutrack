@@ -199,9 +199,11 @@ const transferLeader = async (req, res, next) => {
     }
 
     group.members = group.members.map((m) => {
-      const base = typeof m.toObject === 'function' ? m.toObject() : m;
-      if (m.studentId.toString() === newLeaderId) return { ...base, role: 'leader' };
-      if (m.role === 'leader') return { ...base, role: 'member' };
+      if (m.studentId.toString() === newLeaderId) {
+        m.role = 'leader';
+      } else if (m.role === 'leader') {
+        m.role = 'member';
+      }
       return m;
     });
 

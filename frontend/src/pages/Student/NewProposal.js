@@ -57,15 +57,18 @@ const NewProposal = () => {
       const res = await userAPI.getUserGroups(user.id);
       const fetched = res.data.groups || [];
       setGroups(fetched);
-      if (!formData.groupId && fetched.length > 0) {
-        setFormData((prev) => ({ ...prev, groupId: fetched[0]._id }));
+      if (fetched.length > 0) {
+        setFormData((prev) => {
+          if (prev.groupId) return prev;
+          return { ...prev, groupId: fetched[0]._id };
+        });
       }
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to fetch groups');
     } finally {
       setGroupsLoading(false);
     }
-  }, [formData.groupId, showError, user]);
+  }, [showError, user]);
 
   useEffect(() => {
     fetchGroups();
