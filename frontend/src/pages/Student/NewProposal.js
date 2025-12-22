@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectAPI, allocationAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
-import { useAuth } from '../../contexts/AuthContext';
 import './NewProposal.css';
 
 const NewProposal = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
-  const { user } = useAuth();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -32,6 +30,7 @@ const NewProposal = () => {
   // Fetch guides on component mount
   useEffect(() => {
     fetchGuides();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchGuides = async () => {
@@ -155,7 +154,7 @@ const NewProposal = () => {
         submitData.append('proposalDocument', file);
       }
 
-      const response = await projectAPI.create(submitData);
+      await projectAPI.create(submitData);
 
       showSuccess('Project proposal submitted successfully!');
 
