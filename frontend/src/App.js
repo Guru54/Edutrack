@@ -2,23 +2,36 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { NotificationProvider } from './contexts/NotificationContext';
-import Header from './components/common/Header';
-import Sidebar from './components/common/Sidebar';
-import Notification from './components/common/Notification';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import StudentDashboard from './pages/Student/Dashboard';
 import NewProposal from './pages/Student/NewProposal';
 import FacultyDashboard from './pages/Faculty/Dashboard';
 import AdminDashboard from './pages/Admin/Dashboard';
-import './App.css';
+import MyProjects from './pages/Student/MyProjects';
+import ProjectDetails from './pages/Student/ProjectDetails';
+import Milestones from './pages/Student/Milestones';
+import ReviewQueue from './pages/Faculty/ReviewQueue';
+import FacultyMyProjects from './pages/Faculty/MyProjects';
+import Reviews from './pages/Faculty/Reviews';
+import Workload from './pages/Faculty/Workload';
+import Allocations from './pages/Admin/Allocations';
+import Users from './pages/Admin/Users';
+import Analytics from './pages/Admin/Analytics';
+import AppShell from './components/layout/AppShell';
+import { Toaster } from 'react-hot-toast';
+import Spinner from './components/ui/Spinner';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spinner />
+      </div>
+    );
   }
 
   if (!user) {
@@ -29,15 +42,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/unauthorized" replace />;
   }
 
-  return (
-    <div className="layout">
-      <Header />
-      <div className="main-container">
-        <Sidebar />
-        <main className="content">{children}</main>
-      </div>
-    </div>
-  );
+  return <AppShell>{children}</AppShell>;
 };
 
 // Public Route Component
@@ -58,7 +63,7 @@ function App() {
     <Router>
       <AuthProvider>
         <NotificationProvider>
-          <Notification />
+          <Toaster position="top-right" />
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={
@@ -80,10 +85,12 @@ function App() {
             } />
             <Route path="/student/projects" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <div className="page-placeholder">
-                  <h1>My Projects</h1>
-                  <p>Projects page - To be implemented with full project list and details</p>
-                </div>
+                <MyProjects />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/projects/:id" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ProjectDetails />
               </ProtectedRoute>
             } />
             <Route path="/student/new-proposal" element={
@@ -91,12 +98,9 @@ function App() {
                 <NewProposal />
               </ProtectedRoute>
             } />
-            <Route path="/student/groups" element={
+            <Route path="/student/milestones" element={
               <ProtectedRoute allowedRoles={['student']}>
-                <div className="page-placeholder">
-                  <h1>My Groups</h1>
-                  <p>Groups management - To be implemented</p>
-                </div>
+                <Milestones />
               </ProtectedRoute>
             } />
 
@@ -108,18 +112,22 @@ function App() {
             } />
             <Route path="/faculty/projects" element={
               <ProtectedRoute allowedRoles={['faculty']}>
-                <div className="page-placeholder">
-                  <h1>My Projects</h1>
-                  <p>Assigned projects - To be implemented</p>
-                </div>
+                <FacultyMyProjects />
               </ProtectedRoute>
             } />
             <Route path="/faculty/reviews" element={
               <ProtectedRoute allowedRoles={['faculty']}>
-                <div className="page-placeholder">
-                  <h1>Pending Reviews</h1>
-                  <p>Project reviews - To be implemented</p>
-                </div>
+                <Reviews />
+              </ProtectedRoute>
+            } />
+            <Route path="/faculty/review-queue" element={
+              <ProtectedRoute allowedRoles={['faculty']}>
+                <ReviewQueue />
+              </ProtectedRoute>
+            } />
+            <Route path="/faculty/workload" element={
+              <ProtectedRoute allowedRoles={['faculty']}>
+                <Workload />
               </ProtectedRoute>
             } />
 
@@ -129,36 +137,19 @@ function App() {
                 <AdminDashboard />
               </ProtectedRoute>
             } />
-            <Route path="/admin/projects" element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <div className="page-placeholder">
-                  <h1>All Projects</h1>
-                  <p>All projects management - To be implemented</p>
-                </div>
-              </ProtectedRoute>
-            } />
             <Route path="/admin/allocations" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <div className="page-placeholder">
-                  <h1>Guide Allocations</h1>
-                  <p>Allocation management - To be implemented</p>
-                </div>
+                <Allocations />
               </ProtectedRoute>
             } />
             <Route path="/admin/users" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <div className="page-placeholder">
-                  <h1>User Management</h1>
-                  <p>User management - To be implemented</p>
-                </div>
+                <Users />
               </ProtectedRoute>
             } />
             <Route path="/admin/analytics" element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <div className="page-placeholder">
-                  <h1>Analytics</h1>
-                  <p>Detailed analytics - To be implemented</p>
-                </div>
+                <Analytics />
               </ProtectedRoute>
             } />
 

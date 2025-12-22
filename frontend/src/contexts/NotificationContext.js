@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
+import toast from 'react-hot-toast';
 
 const NotificationContext = createContext();
 
@@ -11,23 +12,22 @@ export const useNotification = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([]);
-
-  const removeNotification = useCallback((id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
-
   const addNotification = useCallback((message, type = 'info') => {
-    const id = Date.now();
-    const notification = { id, message, type };
-    
-    setNotifications(prev => [...prev, notification]);
-    
-    // Auto remove after 5 seconds
-    setTimeout(() => {
-      removeNotification(id);
-    }, 5000);
-  }, [removeNotification]);
+    const options = { duration: 4000 };
+    switch (type) {
+      case 'success':
+        toast.success(message, options);
+        break;
+      case 'error':
+        toast.error(message, options);
+        break;
+      case 'warning':
+        toast(message, { ...options, icon: '⚠️' });
+        break;
+      default:
+        toast(message, options);
+    }
+  }, []);
 
   const showSuccess = useCallback((message) => {
     addNotification(message, 'success');
@@ -46,9 +46,7 @@ export const NotificationProvider = ({ children }) => {
   }, [addNotification]);
 
   const value = {
-    notifications,
     addNotification,
-    removeNotification,
     showSuccess,
     showError,
     showWarning,
@@ -56,8 +54,6 @@ export const NotificationProvider = ({ children }) => {
   };
 
   return (
-    <NotificationContext.Provider value={value}>
-      {children}
-    </NotificationContext.Provider>
+    <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>
   );
 };

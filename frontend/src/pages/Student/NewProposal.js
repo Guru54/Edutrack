@@ -2,13 +2,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { projectAPI, userAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
-import './NewProposal.css';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import { Input, Select, Textarea } from '../../components/ui/Input';
+import Spinner from '../../components/ui/Spinner';
+import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 
 const NewProposal = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     projectType: 'Minor Project',
@@ -20,7 +23,6 @@ const NewProposal = () => {
     semester: '',
     guideId: ''
   });
-
   const [file, setFile] = useState(null);
   const [guides, setGuides] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -39,30 +41,21 @@ const NewProposal = () => {
     }
   }, [showError]);
 
-  // Fetch guides on component mount
   useEffect(() => {
     fetchGuides();
   }, [fetchGuides]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-    // Clear error for this field
+    setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }));
+      setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      // Validate file type
       const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
       if (!allowedTypes.includes(selectedFile.type)) {
         showError('Only PDF, DOC, and DOCX files are allowed');
@@ -70,7 +63,6 @@ const NewProposal = () => {
         return;
       }
 
-      // Validate file size (10MB)
       if (selectedFile.size > 10 * 1024 * 1024) {
         showError('File size must be less than 10MB');
         e.target.value = '';
@@ -83,44 +75,20 @@ const NewProposal = () => {
 
   const validateForm = () => {
     const newErrors = {};
+    if (!formData.title.trim()) newErrors.title = 'Project title is required';
+    else if (formData.title.trim().length < 10) newErrors.title = 'Project title must be at least 10 characters';
 
-    if (!formData.title.trim()) {
-      newErrors.title = 'Project title is required';
-    } else if (formData.title.trim().length < 10) {
-      newErrors.title = 'Project title must be at least 10 characters';
-    }
+    if (!formData.projectType) newErrors.projectType = 'Project type is required';
+    if (!formData.description.trim()) newErrors.description = 'Description is required';
+    else if (formData.description.trim().length < 50) newErrors.description = 'Description must be at least 50 characters';
 
-    if (!formData.projectType) {
-      newErrors.projectType = 'Project type is required';
-    }
+    if (!formData.objectives.trim()) newErrors.objectives = 'Objectives are required';
+    else if (formData.objectives.trim().length < 30) newErrors.objectives = 'Objectives must be at least 30 characters';
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    } else if (formData.description.trim().length < 50) {
-      newErrors.description = 'Description must be at least 50 characters';
-    }
-
-    if (!formData.objectives.trim()) {
-      newErrors.objectives = 'Objectives are required';
-    } else if (formData.objectives.trim().length < 30) {
-      newErrors.objectives = 'Objectives must be at least 30 characters';
-    }
-
-    if (!formData.technologyStack.trim()) {
-      newErrors.technologyStack = 'Technology stack is required';
-    }
-
-    if (!formData.academicYear) {
-      newErrors.academicYear = 'Academic year is required';
-    }
-
-    if (!formData.semester) {
-      newErrors.semester = 'Semester is required';
-    }
-
-    if (!formData.guideId) {
-      newErrors.guideId = 'Please select a guide';
-    }
+    if (!formData.technologyStack.trim()) newErrors.technologyStack = 'Technology stack is required';
+    if (!formData.academicYear) newErrors.academicYear = 'Academic year is required';
+    if (!formData.semester) newErrors.semester = 'Semester is required';
+    if (!formData.guideId) newErrors.guideId = 'Please select a guide';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -128,7 +96,6 @@ const NewProposal = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) {
       showError('Please fix all validation errors');
       return;
@@ -136,40 +103,25 @@ const NewProposal = () => {
 
     try {
       setLoading(true);
-
-      // Create FormData for file upload
       const submitData = new FormData();
-      submitData.append('title', formData.title);
-      submitData.append('projectType', formData.projectType);
-      submitData.append('description', formData.description);
-      submitData.append('objectives', formData.objectives);
-      submitData.append('technologyStack', formData.technologyStack);
-      submitData.append('expectedOutcomes', formData.expectedOutcomes);
-      submitData.append('academicYear', formData.academicYear);
-      submitData.append('semester', formData.semester);
-      submitData.append('guideId', formData.guideId);
-      
-      if (file) {
-        submitData.append('proposalDocument', file);
-      }
+      const optionalFields = ['expectedOutcomes'];
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (value !== '' || optionalFields.includes(key)) {
+            submitData.append(key, value);
+          }
+        }
+      });
+      if (file) submitData.append('proposalDocument', file);
 
       await projectAPI.create(submitData);
-
       showSuccess('Project proposal submitted successfully!');
-
-      // Redirect after 2 seconds
-      setTimeout(() => {
-        navigate('/student/projects');
-      }, 2000);
-
+      setTimeout(() => navigate('/student/projects'), 1200);
     } catch (error) {
-      setLoading(false);
       showError(error.response?.data?.message || 'Failed to submit proposal');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const handleCancel = () => {
-    navigate('/student/dashboard');
   };
 
   const formatFileSize = (bytes) => {
@@ -181,242 +133,162 @@ const NewProposal = () => {
   };
 
   return (
-    <div className="new-proposal">
-      <div className="proposal-header">
-        <h1>Submit New Project Proposal</h1>
-        <p>Fill in all the required details to submit your project proposal</p>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-brand-600">New Proposal</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Submit your project idea</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Provide detailed information so faculty can review and approve quickly.
+          </p>
+        </div>
+        <Button variant="secondary" onClick={() => navigate('/student/dashboard')}>
+          Back to dashboard
+        </Button>
       </div>
 
-      <div className="proposal-card">
-        <form onSubmit={handleSubmit} className="proposal-form">
-          {/* Project Title */}
-          <div className="form-group">
-            <label htmlFor="title">
-              Project Title <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
+      <Card>
+        <form className="space-y-6" onSubmit={handleSubmit}>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Input
+              label="Project Title"
               name="title"
+              placeholder="Enter your project title"
               value={formData.title}
               onChange={handleInputChange}
-              placeholder="Enter your project title"
-              className={errors.title ? 'error' : ''}
+              error={errors.title}
             />
-            {errors.title && <span className="error-message">{errors.title}</span>}
-          </div>
-
-          {/* Project Type */}
-          <div className="form-group">
-            <label htmlFor="projectType">
-              Project Type <span className="required">*</span>
-            </label>
-            <select
-              id="projectType"
+            <Select
+              label="Project Type"
               name="projectType"
               value={formData.projectType}
               onChange={handleInputChange}
-              className={errors.projectType ? 'error' : ''}
+              error={errors.projectType}
             >
               <option value="Minor Project">Minor Project</option>
               <option value="Major Project">Major Project</option>
-            </select>
-            {errors.projectType && <span className="error-message">{errors.projectType}</span>}
+            </Select>
           </div>
 
-          {/* Description */}
-          <div className="form-group">
-            <label htmlFor="description">
-              Description <span className="required">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={formData.description}
+          <Textarea
+            label="Description"
+            name="description"
+            rows={5}
+            placeholder="Describe your project in detail"
+            value={formData.description}
+            onChange={handleInputChange}
+            error={errors.description}
+          />
+
+          <Textarea
+            label="Objectives"
+            name="objectives"
+            rows={4}
+            placeholder="What are the main objectives of this project?"
+            value={formData.objectives}
+            onChange={handleInputChange}
+            error={errors.objectives}
+          />
+
+          <Input
+            label="Technology Stack"
+            name="technologyStack"
+            placeholder="e.g., React, Node.js, MongoDB, Express"
+            value={formData.technologyStack}
+            onChange={handleInputChange}
+            error={errors.technologyStack}
+            hint="Enter comma-separated technologies"
+          />
+
+          <Textarea
+            label="Expected Outcomes"
+            name="expectedOutcomes"
+            rows={3}
+            placeholder="What results do you expect from this project?"
+            value={formData.expectedOutcomes}
+            onChange={handleInputChange}
+          />
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Select
+              label="Academic Year"
+              name="academicYear"
+              value={formData.academicYear}
               onChange={handleInputChange}
-              placeholder="Describe your project in detail"
-              rows="5"
-              className={errors.description ? 'error' : ''}
-            />
-            {errors.description && <span className="error-message">{errors.description}</span>}
-          </div>
-
-          {/* Objectives */}
-          <div className="form-group">
-            <label htmlFor="objectives">
-              Objectives <span className="required">*</span>
-            </label>
-            <textarea
-              id="objectives"
-              name="objectives"
-              value={formData.objectives}
+              error={errors.academicYear}
+            >
+              <option value="2023-24">2023-24</option>
+              <option value="2024-25">2024-25</option>
+              <option value="2025-26">2025-26</option>
+              <option value="2026-27">2026-27</option>
+            </Select>
+            <Select
+              label="Semester"
+              name="semester"
+              value={formData.semester}
               onChange={handleInputChange}
-              placeholder="What are the main objectives of this project?"
-              rows="4"
-              className={errors.objectives ? 'error' : ''}
-            />
-            {errors.objectives && <span className="error-message">{errors.objectives}</span>}
+              error={errors.semester}
+            >
+              <option value="">Select Semester</option>
+              {[1, 2, 3, 4, 5, 6, 7, 8].map(sem => (
+                <option key={sem} value={sem}>{sem}</option>
+              ))}
+            </Select>
           </div>
 
-          {/* Technology Stack */}
-          <div className="form-group">
-            <label htmlFor="technologyStack">
-              Technology Stack <span className="required">*</span>
-            </label>
-            <input
-              type="text"
-              id="technologyStack"
-              name="technologyStack"
-              value={formData.technologyStack}
+          <div className="grid gap-4 md:grid-cols-2">
+            <Select
+              label="Select Guide"
+              name="guideId"
+              value={formData.guideId}
               onChange={handleInputChange}
-              placeholder="e.g., React, Node.js, MongoDB, Express"
-              className={errors.technologyStack ? 'error' : ''}
-            />
-            {errors.technologyStack && <span className="error-message">{errors.technologyStack}</span>}
-            <small className="field-hint">Enter comma-separated technologies</small>
-          </div>
+              error={errors.guideId}
+              disabled={guidesLoading}
+            >
+              <option value="">{guidesLoading ? 'Loading guides...' : 'Select a guide'}</option>
+              {guides.map(guide => (
+                <option key={guide._id} value={guide._id}>
+                  {guide.fullName} - {guide.department} ({guide.currentProjects} active projects)
+                </option>
+              ))}
+            </Select>
 
-          {/* Expected Outcomes */}
-          <div className="form-group">
-            <label htmlFor="expectedOutcomes">
-              Expected Outcomes
-            </label>
-            <textarea
-              id="expectedOutcomes"
-              name="expectedOutcomes"
-              value={formData.expectedOutcomes}
-              onChange={handleInputChange}
-              placeholder="What results do you expect from this project?"
-              rows="3"
-            />
-          </div>
-
-          {/* Academic Year and Semester - Side by side */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="academicYear">
-                Academic Year <span className="required">*</span>
-              </label>
-              <select
-                id="academicYear"
-                name="academicYear"
-                value={formData.academicYear}
-                onChange={handleInputChange}
-                className={errors.academicYear ? 'error' : ''}
-              >
-                <option value="2023-24">2023-24</option>
-                <option value="2024-25">2024-25</option>
-                <option value="2025-26">2025-26</option>
-                <option value="2026-27">2026-27</option>
-              </select>
-              {errors.academicYear && <span className="error-message">{errors.academicYear}</span>}
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="semester">
-                Semester <span className="required">*</span>
-              </label>
-              <select
-                id="semester"
-                name="semester"
-                value={formData.semester}
-                onChange={handleInputChange}
-                className={errors.semester ? 'error' : ''}
-              >
-                <option value="">Select Semester</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-                <option value="5">5</option>
-                <option value="6">6</option>
-                <option value="7">7</option>
-                <option value="8">8</option>
-              </select>
-              {errors.semester && <span className="error-message">{errors.semester}</span>}
-            </div>
-          </div>
-
-          {/* Select Guide */}
-          <div className="form-group">
-            <label htmlFor="guideId">
-              Select Guide <span className="required">*</span>
-            </label>
-            {guidesLoading ? (
-              <div className="loading-guides">Loading guides...</div>
-            ) : (
-              <select
-                id="guideId"
-                name="guideId"
-                value={formData.guideId}
-                onChange={handleInputChange}
-                className={errors.guideId ? 'error' : ''}
-              >
-                <option value="">Select a guide</option>
-                {guides.map(guide => (
-                  <option key={guide._id} value={guide._id}>
-                    {guide.fullName} - {guide.department} ({guide.currentProjects} active projects)
-                  </option>
-                ))}
-              </select>
-            )}
-            {errors.guideId && <span className="error-message">{errors.guideId}</span>}
-          </div>
-
-          {/* File Upload */}
-          <div className="form-group">
-            <label htmlFor="proposalDocument">
-              Upload Proposal Document
-            </label>
-            <input
-              type="file"
-              id="proposalDocument"
-              name="proposalDocument"
-              accept=".pdf,.doc,.docx"
-              onChange={handleFileChange}
-              className="file-input"
-            />
-            <small className="field-hint">
-              Accepted formats: PDF, DOC, DOCX (Max size: 10MB)
-            </small>
-            {file && (
-              <div className="file-preview">
-                <span className="file-icon">📄</span>
-                <div className="file-info">
-                  <span className="file-name">{file.name}</span>
-                  <span className="file-size">{formatFileSize(file.size)}</span>
+            <div className="space-y-2 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-900/50 dark:text-gray-300">
+              <label className="flex cursor-pointer items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white shadow-sm dark:bg-gray-800">
+                  <CloudArrowUpIcon className="h-5 w-5 text-brand-600" />
                 </div>
-              </div>
-            )}
+                <div>
+                  <p className="font-medium">Upload Proposal (optional)</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">PDF, DOC, DOCX up to 10MB</p>
+                </div>
+                <input type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={handleFileChange} />
+              </label>
+              {file && (
+                <div className="rounded-lg bg-white px-3 py-2 text-xs shadow-sm dark:bg-gray-800">
+                  <p className="font-medium">{file.name}</p>
+                  <p className="text-gray-500 dark:text-gray-400">{formatFileSize(file.size)}</p>
+                </div>
+              )}
+            </div>
           </div>
 
-          {/* Form Actions */}
-          <div className="form-actions">
-            <button 
-              type="button" 
-              onClick={handleCancel}
-              className="btn-secondary"
-              disabled={loading}
-            >
+          <div className="flex flex-wrap items-center justify-end gap-3">
+            <Button type="button" variant="secondary" onClick={() => navigate('/student/dashboard')} disabled={loading}>
               Cancel
-            </button>
-            <button 
-              type="submit" 
-              className="btn-primary"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <span className="spinner"></span>
-                  Submitting...
-                </>
-              ) : (
-                'Submit Proposal'
-              )}
-            </button>
+            </Button>
+            <Button type="submit" loading={loading}>
+              {loading ? 'Submitting...' : 'Submit Proposal'}
+            </Button>
           </div>
         </form>
-      </div>
+      </Card>
+      {guidesLoading && (
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <Spinner size="sm" />
+          Loading guides...
+        </div>
+      )}
     </div>
   );
 };
