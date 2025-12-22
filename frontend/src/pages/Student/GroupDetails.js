@@ -13,7 +13,7 @@ import { groupAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
-import { isGroupLeader } from '../../utils/group';
+import { getMemberId, isGroupLeader } from '../../utils/group';
 
 const MemberRow = ({ member, isLeader, onRemove }) => {
   const fullName = member.fullName || member.studentId?.fullName || 'Member';
@@ -202,7 +202,7 @@ export default function GroupDetails() {
         <div className="space-y-3">
           {group.members?.map((member) => (
             <MemberRow
-              key={member.studentId?._id || member.studentId}
+              key={getMemberId(member)}
               member={member}
               isLeader={isLeader}
               onRemove={(m) => {

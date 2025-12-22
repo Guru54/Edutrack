@@ -9,7 +9,7 @@ const { proposalApprovedEmail, proposalRejectedEmail } = require('../utils/email
 // @desc    Create new project proposal
 // @route   POST /api/projects
 // @access  Private (Student)
-  const createProject = async (req, res, next) => {
+const createProject = async (req, res, next) => {
   try {
     const { 
       title, 

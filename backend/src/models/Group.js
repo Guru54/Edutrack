@@ -39,6 +39,7 @@ const groupSchema = new mongoose.Schema({
 
 // Validate group size (solo groups allowed: 1-4 members with exactly one leader)
 groupSchema.pre('save', function(next) {
+  if (!this.isModified('members')) return next();
   if (this.members.length < 1 || this.members.length > 4) {
     return next(new Error('Group must have 1-4 members'));
   }

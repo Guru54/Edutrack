@@ -9,7 +9,7 @@ import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import Spinner from '../../components/ui/Spinner';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
-import { isGroupLeader } from '../../utils/group';
+import { getMemberId, isGroupLeader } from '../../utils/group';
 
 const MemberAvatar = ({ member }) => {
   const fullName = member.fullName || member.studentId?.fullName || 'Student';
@@ -93,10 +93,7 @@ export default function MyGroups() {
             >
               <div className="mb-4 grid gap-2">
                 {group.members?.map((member) => (
-                  <MemberAvatar
-                    key={member.studentId?._id || member.studentId}
-                    member={member}
-                  />
+                  <MemberAvatar key={getMemberId(member)} member={member} />
                 ))}
               </div>
               <div className="flex justify-end">

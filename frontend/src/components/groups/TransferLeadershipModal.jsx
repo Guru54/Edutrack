@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Modal from '../ui/Modal';
 import { Select } from '../ui/Input';
+import { getMemberId } from '../../utils/group';
 
 export default function TransferLeadershipModal({ open, onClose, members = [], onSubmit, loading }) {
   const [newLeader, setNewLeader] = useState('');
@@ -37,7 +38,7 @@ export default function TransferLeadershipModal({ open, onClose, members = [], o
       ) : (
         <Select value={newLeader} onChange={(e) => setNewLeader(e.target.value)}>
           {candidates.map((member) => {
-            const id = member.studentId?._id || member.studentId;
+            const id = getMemberId(member);
             const name = member.fullName || member.studentId?.fullName || 'Member';
             return (
               <option key={id} value={id}>
