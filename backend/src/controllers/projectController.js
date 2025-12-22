@@ -9,7 +9,7 @@ const { proposalApprovedEmail, proposalRejectedEmail } = require('../utils/email
 // @desc    Create new project proposal
 // @route   POST /api/projects
 // @access  Private (Student)
-const createProject = async (req, res, next) => {
+  const createProject = async (req, res, next) => {
   try {
     const { 
       title, 
@@ -24,26 +24,29 @@ const createProject = async (req, res, next) => {
       expectedOutcomes
     } = req.body;
 
-    // If groupId is provided, verify group exists and user is part of it
+    // Resolve group and enforce leader-only submission
+    let group = null;
     if (groupId) {
-      const group = await Group.findById(groupId);
+      group = await Group.findById(groupId);
       if (!group) {
         return res.status(404).json({ message: 'Group not found' });
       }
-
-      const isMember = group.members.some(member => member.studentId.toString() === req.user.id);
-      if (!isMember) {
-        return res.status(403).json({ message: 'You are not a member of this group' });
-      }
     } else {
-      // If no groupId, try to find user's group
-      const group = await Group.findOne({
-        'members.studentId': req.user.id
-      });
-      
-      if (group) {
-        req.body.groupId = group._id;
-      }
+      group = await Group.findOne({ 'members.studentId': req.user.id });
+      if (group) req.body.groupId = group._id;
+    }
+
+    if (!group) {
+      return res.status(400).json({ message: 'Group is required to submit a proposal' });
+    }
+
+    const membership = group.members.find(member => member.studentId.toString() === req.user.id);
+    if (!membership) {
+      return res.status(403).json({ message: 'You are not a member of this group' });
+    }
+
+    if (membership.role !== 'leader') {
+      return res.status(403).json({ message: 'Only the group leader can submit a proposal' });
     }
 
     // Check for duplicates
@@ -67,6 +70,7 @@ const createProject = async (req, res, next) => {
       semester,
       guideId: guideId || null,
       expectedOutcomes: expectedOutcomes || null,
+      submittedBy: req.user.id,
       status: 'proposed',
       submissionDate: new Date()
     });
@@ -89,6 +93,15 @@ const createProject = async (req, res, next) => {
       await Notification.create({
         userId: guideId,
         message: `New project proposal "${title}" submitted by ${req.user.fullName}`,
+        type: 'info'
+      });
+    }
+
+    // Notify group members
+    for (const member of group.members) {
+      await Notification.create({
+        userId: member.studentId,
+        message: `Project proposal "${title}" submitted for group "${group.groupName}"`,
         type: 'info'
       });
     }

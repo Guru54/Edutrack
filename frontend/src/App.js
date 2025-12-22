@@ -15,6 +15,8 @@ import ReviewQueue from './pages/Faculty/ReviewQueue';
 import FacultyMyProjects from './pages/Faculty/MyProjects';
 import Reviews from './pages/Faculty/Reviews';
 import Workload from './pages/Faculty/Workload';
+import MyGroups from './pages/Student/MyGroups';
+import GroupDetails from './pages/Student/GroupDetails';
 import Allocations from './pages/Admin/Allocations';
 import Users from './pages/Admin/Users';
 import Analytics from './pages/Admin/Analytics';
@@ -91,6 +93,16 @@ function App() {
             <Route path="/student/projects/:id" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <ProjectDetails />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/groups" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <MyGroups />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/groups/:id" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <GroupDetails />
               </ProtectedRoute>
             } />
             <Route path="/student/new-proposal" element={

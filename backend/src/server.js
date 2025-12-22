@@ -12,6 +12,7 @@ const userRoutes = require('./routes/userRoutes');
 const allocationRoutes = require('./routes/allocationRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const groupRoutes = require('./routes/groupRoutes');
 
 const app = express();
 
@@ -35,6 +36,7 @@ app.use('/api', userRoutes);
 app.use('/api', allocationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api', fileRoutes);
+app.use('/api/groups', groupRoutes);
 
 // Health check route
 app.get('/api/health', (req, res) => {

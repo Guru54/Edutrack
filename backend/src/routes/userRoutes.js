@@ -5,9 +5,6 @@ const {
   getUser,
   updateUser,
   verifyUser,
-  createGroup,
-  getGroup,
-  updateGroup,
   getUserGroups,
   getGuides
 } = require('../controllers/userController');
@@ -20,11 +17,6 @@ router.get('/users/:id', protect, getUser);
 router.put('/users/:id', protect, updateUser);
 router.put('/users/:id/verify', protect, authorize('admin'), verifyUser);
 router.get('/users/:id/groups', protect, getUserGroups);
-
-// Group routes
-router.post('/groups', protect, authorize('student'), createGroup);
-router.get('/groups/:id', protect, getGroup);
-router.put('/groups/:id', protect, updateGroup);
 
 // Guides route
 router.get('/guides', protect, getGuides);

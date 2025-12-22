@@ -18,6 +18,7 @@ const navByRole = {
   student: [
     { label: 'Dashboard', icon: HomeIcon, to: '/student/dashboard' },
     { label: 'New Proposal', icon: DocumentPlusIcon, to: '/student/new-proposal' },
+    { label: 'My Groups', icon: UserGroupIcon, to: '/student/groups' },
     { label: 'My Projects', icon: ClipboardDocumentListIcon, to: '/student/projects' },
     { label: 'Milestones', icon: Squares2X2Icon, to: '/student/milestones' }
   ],
