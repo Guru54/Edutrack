@@ -81,7 +81,8 @@ export const userAPI = {
   getById: (id) => api.get(`/users/${id}`),
   update: (id, data) => api.put(`/users/${id}`, data),
   verify: (id) => api.put(`/users/${id}/verify`),
-  getUserGroups: (id) => api.get(`/users/${id}/groups`)
+  getUserGroups: (id) => api.get(`/users/${id}/groups`),
+  getGuides: () => api.get('/guides')
 };
 
 // Group API

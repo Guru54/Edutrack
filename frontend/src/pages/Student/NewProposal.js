@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { projectAPI, allocationAPI } from '../../services/api';
+import { projectAPI, userAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import './NewProposal.css';
 
@@ -27,23 +27,22 @@ const NewProposal = () => {
   const [guidesLoading, setGuidesLoading] = useState(true);
   const [errors, setErrors] = useState({});
 
-  // Fetch guides on component mount
-  useEffect(() => {
-    fetchGuides();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const fetchGuides = async () => {
+  const fetchGuides = useCallback(async () => {
     try {
       setGuidesLoading(true);
-      const response = await allocationAPI.getGuides();
+      const response = await userAPI.getGuides();
       setGuides(response.data.data || []);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to fetch guides');
     } finally {
       setGuidesLoading(false);
     }
-  };
+  }, [showError]);
+
+  // Fetch guides on component mount
+  useEffect(() => {
+    fetchGuides();
+  }, [fetchGuides]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
