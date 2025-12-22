@@ -9,6 +9,7 @@ import Badge from '../../components/ui/Badge';
 import EmptyState from '../../components/ui/EmptyState';
 import Spinner from '../../components/ui/Spinner';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { isGroupLeader } from '../../utils/group';
 
 const MemberAvatar = ({ member }) => {
   const fullName = member.fullName || member.studentId?.fullName || 'Student';
@@ -86,14 +87,7 @@ export default function MyGroups() {
               description={`${group.members?.length || 0} members`}
               headerRight={
                 <Badge status="pending">
-                  {group.members?.find(
-                    (m) =>
-                      m.role === 'leader' &&
-                      ((typeof m.studentId === 'string' && m.studentId === user.id) ||
-                        m.studentId?._id === user.id)
-                  )
-                    ? 'Leader'
-                    : 'Member'}
+                  {isGroupLeader(group, user.id) ? 'Leader' : 'Member'}
                 </Badge>
               }
             >

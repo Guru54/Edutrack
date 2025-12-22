@@ -13,6 +13,7 @@ import { groupAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { isGroupLeader } from '../../utils/group';
 
 const MemberRow = ({ member, isLeader, onRemove }) => {
   const fullName = member.fullName || member.studentId?.fullName || 'Member';
@@ -74,11 +75,7 @@ export default function GroupDetails() {
     fetchGroup();
   }, [fetchGroup]);
 
-  const isLeader = group?.members?.some(
-    (m) =>
-      m.role === 'leader' &&
-      ((typeof m.studentId === 'string' && m.studentId === user?.id) || m.studentId?._id === user?.id)
-  );
+  const isLeader = isGroupLeader(group, user?.id);
 
   const handleAddMember = async ({ email }) => {
     try {

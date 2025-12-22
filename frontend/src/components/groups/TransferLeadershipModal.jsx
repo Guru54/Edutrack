@@ -4,15 +4,16 @@ import { Select } from '../ui/Input';
 
 export default function TransferLeadershipModal({ open, onClose, members = [], onSubmit, loading }) {
   const [newLeader, setNewLeader] = useState('');
+  const candidates = members.filter((m) => m.role !== 'leader');
 
   useEffect(() => {
     if (open) {
-      const firstMember = members.find((m) => m.role !== 'leader');
+      const firstMember = candidates[0];
       setNewLeader(firstMember?.studentId?._id || firstMember?.studentId || '');
     } else {
       setNewLeader('');
     }
-  }, [open, members]);
+  }, [open, candidates]);
 
   return (
     <Modal
@@ -20,17 +21,22 @@ export default function TransferLeadershipModal({ open, onClose, members = [], o
       onClose={onClose}
       title="Transfer leadership"
       description="Select a member to become the new leader."
-      primaryAction={{
-        label: 'Transfer',
-        onClick: () => onSubmit(newLeader),
-        loading
-      }}
+      primaryAction={
+        candidates.length
+          ? {
+              label: 'Transfer',
+              onClick: () => onSubmit(newLeader),
+              loading
+            }
+          : null
+      }
       secondaryAction={{ label: 'Cancel', onClick: onClose }}
     >
-      <Select value={newLeader} onChange={(e) => setNewLeader(e.target.value)}>
-        {members
-          .filter((m) => m.role !== 'leader')
-          .map((member) => {
+      {candidates.length === 0 ? (
+        <p className="text-sm text-gray-500">No eligible members to transfer leadership.</p>
+      ) : (
+        <Select value={newLeader} onChange={(e) => setNewLeader(e.target.value)}>
+          {candidates.map((member) => {
             const id = member.studentId?._id || member.studentId;
             const name = member.fullName || member.studentId?.fullName || 'Member';
             return (
@@ -39,7 +45,8 @@ export default function TransferLeadershipModal({ open, onClose, members = [], o
               </option>
             );
           })}
-      </Select>
+        </Select>
+      )}
     </Modal>
   );
 }

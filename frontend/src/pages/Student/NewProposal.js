@@ -8,6 +8,7 @@ import { Input, Select, Textarea } from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
+import { isGroupLeader } from '../../utils/group';
 
 const NewProposal = () => {
   const navigate = useNavigate();
@@ -75,11 +76,7 @@ const NewProposal = () => {
   }, [fetchGroups]);
 
   const selectedGroup = groups.find((g) => g._id === formData.groupId);
-  const isLeader = selectedGroup?.members?.some(
-    (m) =>
-      m.role === 'leader' &&
-      ((typeof m.studentId === 'string' && m.studentId === user?.id) || m.studentId?._id === user?.id)
-  );
+  const isLeader = isGroupLeader(selectedGroup, user?.id);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

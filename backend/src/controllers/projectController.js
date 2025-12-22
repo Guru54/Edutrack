@@ -99,6 +99,7 @@ const { proposalApprovedEmail, proposalRejectedEmail } = require('../utils/email
 
     // Notify group members
     for (const member of group.members) {
+      if (member.studentId.toString() === req.user.id) continue;
       await Notification.create({
         userId: member.studentId,
         message: `Project proposal "${title}" submitted for group "${group.groupName}"`,
