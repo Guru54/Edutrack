@@ -33,6 +33,9 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Project objectives are required']
   },
+  expectedOutcomes: {
+    type: String
+  },
   status: {
     type: String,
     enum: ['proposed', 'approved', 'in_progress', 'completed', 'rejected'],

@@ -202,6 +202,46 @@ const getUserGroups = async (req, res, next) => {
   }
 };
 
+// @desc    Get all faculty guides
+// @route   GET /api/guides
+// @access  Private
+const getGuides = async (req, res, next) => {
+  try {
+    const Project = require('../models/Project');
+    
+    const guides = await User.find(
+      { role: 'faculty', isVerified: true },
+      { password: 0, verificationToken: 0 }
+    ).sort({ fullName: 1 });
+    
+    // Get workload for each guide
+    const guidesWithWorkload = await Promise.all(
+      guides.map(async (guide) => {
+        const projectCount = await Project.countDocuments({
+          guideId: guide._id,
+          status: { $in: ['approved', 'in_progress'] }
+        });
+        
+        return {
+          _id: guide._id,
+          fullName: guide.fullName,
+          department: guide.department,
+          email: guide.email,
+          currentProjects: projectCount
+        };
+      })
+    );
+    
+    res.status(200).json({
+      success: true,
+      data: guidesWithWorkload
+    });
+    
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getUsers,
   getUser,
@@ -210,5 +250,6 @@ module.exports = {
   createGroup,
   getGroup,
   updateGroup,
-  getUserGroups
+  getUserGroups,
+  getGuides
 };
