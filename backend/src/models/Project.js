@@ -15,6 +15,11 @@ const projectSchema = new mongoose.Schema({
     ref: 'Group',
     required: [true, 'Group ID is required']
   },
+  submittedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
   guideId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

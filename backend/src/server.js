@@ -12,6 +12,7 @@ const userRoutes = require('./routes/userRoutes');
 const allocationRoutes = require('./routes/allocationRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const fileRoutes = require('./routes/fileRoutes');
+const groupRoutes = require('./routes/groupRoutes');
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/projects/:id/milestones', milestoneRoutes);
 app.use('/api/milestones', milestoneRoutes);
+app.use('/api/groups', groupRoutes);
 app.use('/api', userRoutes);
 app.use('/api', allocationRoutes);
 app.use('/api/analytics', analyticsRoutes);

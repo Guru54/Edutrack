@@ -31,9 +31,16 @@ const createProject = async (req, res, next) => {
         return res.status(404).json({ message: 'Group not found' });
       }
 
-      const isMember = group.members.some(member => member.studentId.toString() === req.user.id);
-      if (!isMember) {
+      const member = group.members.find(m => m.studentId.toString() === req.user.id);
+      if (!member) {
         return res.status(403).json({ message: 'You are not a member of this group' });
+      }
+
+      // Only leader or admin can submit project for group
+      if (req.user.role !== 'admin' && member.role !== 'leader') {
+        return res.status(403).json({ 
+          message: 'Only the group leader can submit a project proposal' 
+        });
       }
     } else {
       // If no groupId, try to find user's group
@@ -43,6 +50,14 @@ const createProject = async (req, res, next) => {
       
       if (group) {
         req.body.groupId = group._id;
+        
+        // Verify user is leader of found group
+        const member = group.members.find(m => m.studentId.toString() === req.user.id);
+        if (req.user.role !== 'admin' && member.role !== 'leader') {
+          return res.status(403).json({ 
+            message: 'Only the group leader can submit a project proposal' 
+          });
+        }
       }
     }
 
@@ -60,6 +75,7 @@ const createProject = async (req, res, next) => {
       title,
       description,
       groupId: req.body.groupId || null,
+      submittedBy: req.user.id,
       projectType: projectType.toLowerCase(), // Convert to lowercase for enum
       technologyStack: techStack,
       objectives,
