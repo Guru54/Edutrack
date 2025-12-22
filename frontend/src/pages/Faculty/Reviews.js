@@ -41,7 +41,7 @@ export default function Reviews() {
       return;
     }
     try {
-      await milestoneAPI.provideFeedback(feedback.milestoneId, { comment: feedback.comment, score: feedback.score });
+      await milestoneAPI.provideFeedback(feedback.milestoneId, { comment: feedback.comment, score: feedback.score ? Number(feedback.score) : null });
       showSuccess('Feedback submitted');
       setFeedback({ open: false, milestoneId: null, comment: '', score: '' });
       load();

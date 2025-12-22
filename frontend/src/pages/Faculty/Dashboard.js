@@ -38,7 +38,7 @@ const FacultyDashboard = () => {
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const projectsRes = await projectAPI.getAll({ role: 'faculty' });
+      const projectsRes = await projectAPI.getAll();
       setProjects(projectsRes.data.projects || []);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to load dashboard');

@@ -28,8 +28,10 @@ export default function ProjectDetails() {
         projectAPI.getById(id),
         milestoneAPI.getByProject(id)
       ]);
-      setProject(projectRes.data.project || projectRes.data);
-      setMilestones(milestonesRes.data.milestones || []);
+      const projectData = projectRes.data?.project || projectRes.data?.data || projectRes.data;
+      const milestoneData = milestonesRes.data?.milestones || milestonesRes.data?.data || [];
+      setProject(projectData);
+      setMilestones(milestoneData);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to load project');
     } finally {
@@ -130,7 +132,7 @@ export default function ProjectDetails() {
         </Card>
         <Card title="Technology">
           <div className="flex flex-wrap gap-2">
-            {project.technologyStack?.split(',').map(tag => (
+            {project.technologyStack?.split(',')?.map(tag => (
               <span key={tag} className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
                 {tag.trim()}
               </span>
@@ -143,7 +145,7 @@ export default function ProjectDetails() {
         <Card title="Objectives">
           <ul className="list-disc space-y-2 pl-5 text-sm text-gray-700 dark:text-gray-200">
             {(project.objectives || '').split('.').filter(Boolean).map((obj, idx) => (
-              <li key={idx}>{obj.trim()}</li>
+              <li key={`${idx}-${obj.trim().slice(0,20)}`}>{obj.trim()}</li>
             ))}
           </ul>
         </Card>

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import DataTable from '../../components/ui/DataTable';
 import { Select, Input } from '../../components/ui/Input';
@@ -37,11 +36,7 @@ export default function FacultyMyProjects() {
       {
         header: 'Title',
         accessorKey: 'title',
-        cell: info => (
-          <Link to={`/student/projects/${info.row.original._id}`} className="text-brand-600 hover:underline">
-            {info.getValue()}
-          </Link>
-        )
+        cell: info => info.getValue()
       },
       { header: 'Type', accessorKey: 'projectType' },
       { header: 'Status', accessorKey: 'status', cell: info => <Badge status={info.getValue()}>{getStatusLabel(info.getValue())}</Badge> },

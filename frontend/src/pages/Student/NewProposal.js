@@ -104,7 +104,14 @@ const NewProposal = () => {
     try {
       setLoading(true);
       const submitData = new FormData();
-      Object.entries(formData).forEach(([key, value]) => submitData.append(key, value));
+      const optionalFields = ['expectedOutcomes'];
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          if (value !== '' || optionalFields.includes(key)) {
+            submitData.append(key, value);
+          }
+        }
+      });
       if (file) submitData.append('proposalDocument', file);
 
       await projectAPI.create(submitData);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { projectAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { formatDate, getStatusLabel } from '../../utils/helpers';
@@ -35,6 +35,7 @@ const StatCard = ({ title, value, icon: Icon, accent }) => {
 
 const StudentDashboard = () => {
   const [projects, setProjects] = useState([]);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const { showError } = useNotification();
 
@@ -105,7 +106,7 @@ const StudentDashboard = () => {
           <EmptyState
             title="No projects yet"
             description="Start by submitting a new proposal to kick off your project."
-            action={{ label: 'Submit Proposal', onClick: () => (window.location.href = '/student/new-proposal') }}
+            action={{ label: 'Submit Proposal', onClick: () => navigate('/student/new-proposal') }}
           />
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -113,10 +114,10 @@ const StudentDashboard = () => {
               <Card key={project._id} className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="line-clamp-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {project.title}
                     </h3>
-                    <p className="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 overflow-hidden text-ellipsis">
                       {project.description}
                     </p>
                   </div>

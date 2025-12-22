@@ -124,6 +124,7 @@ export default function Milestones() {
           <div className="space-y-2">
             <Input
               type="file"
+              accept=".pdf,.doc,.docx,.zip"
               onChange={e => setSubmission(prev => ({ ...prev, file: e.target.files?.[0] }))}
             />
             {submission.file && <p className="text-xs text-gray-500 dark:text-gray-400">{submission.file.name}</p>}

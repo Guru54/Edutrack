@@ -69,7 +69,7 @@ const AdminDashboard = () => {
                     <PieChart>
                       <Pie dataKey="value" data={analytics.statusDistribution} label>
                         {analytics.statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          <Cell key={entry.status || entry.label || index} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
                       <Tooltip />

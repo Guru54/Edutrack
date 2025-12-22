@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import clsx from 'clsx';
 import Topbar from './Topbar';
 import Sidebar from './Sidebar';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,7 +26,7 @@ export default function AppShell({ children }) {
   const role = useMemo(() => user?.role || 'student', [user]);
 
   return (
-    <div className={clsx('min-h-screen', isDark && 'dark')}>
+    <div className="min-h-screen">
       <div className="flex min-h-screen bg-gray-50 text-gray-900 transition-colors dark:bg-gray-950 dark:text-gray-100">
         <Sidebar role={role} open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <div className="flex flex-1 flex-col">

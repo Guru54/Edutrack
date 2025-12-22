@@ -6,7 +6,6 @@ import {
   PowerIcon
 } from '@heroicons/react/24/outline';
 import Button from '../ui/Button';
-import clsx from 'clsx';
 
 export default function Topbar({ onToggleSidebar, user, onLogout, isDark, toggleDarkMode }) {
   return (
@@ -32,7 +31,7 @@ export default function Topbar({ onToggleSidebar, user, onLogout, isDark, toggle
         </button>
         <div className="flex items-center gap-2 rounded-full bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 dark:bg-gray-900 dark:text-gray-100">
           <span className="hidden sm:inline">{user?.fullName || user?.name || 'User'}</span>
-          <span className={clsx('flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white')}>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
             {user?.fullName?.[0]?.toUpperCase() || user?.name?.[0]?.toUpperCase() || '?'}
           </span>
         </div>
