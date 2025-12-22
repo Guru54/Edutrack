@@ -1,30 +1,47 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { projectAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
-import Loading from '../../components/common/Loading';
-import { formatDate, getStatusColor, getStatusLabel } from '../../utils/helpers';
-import './Dashboard.css';
+import { formatDate, getStatusLabel } from '../../utils/helpers';
+import Card from '../../components/ui/Card';
+import Button from '../../components/ui/Button';
+import Badge from '../../components/ui/Badge';
+import EmptyState from '../../components/ui/EmptyState';
+import Spinner from '../../components/ui/Spinner';
+import { BookOpenIcon, CheckCircleIcon, ClockIcon, DocumentCheckIcon } from '@heroicons/react/24/outline';
+
+const StatCard = ({ title, value, icon: Icon, accent }) => {
+  const accentClass = {
+    brand: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200',
+    blue: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-200',
+    green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200',
+    amber: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200'
+  }[accent];
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${accentClass}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</p>
+          <p className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{value}</p>
+        </div>
+      </div>
+    </Card>
+  );
+};
 
 const StudentDashboard = () => {
   const [projects, setProjects] = useState([]);
-  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
   const { showError } = useNotification();
 
   const fetchDashboardData = useCallback(async () => {
     try {
       const projectsRes = await projectAPI.getAll();
-      const projectsData = projectsRes.data.projects || [];
-      setProjects(projectsData);
-
-      // Calculate stats
-      const statsData = {
-        total: projectsData.length,
-        approved: projectsData.filter(p => p.status === 'approved').length,
-        inProgress: projectsData.filter(p => p.status === 'in_progress').length,
-        proposed: projectsData.filter(p => p.status === 'proposed').length
-      };
-      setStats(statsData);
+      setProjects(projectsRes.data.projects || []);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to load dashboard');
     } finally {
@@ -36,65 +53,91 @@ const StudentDashboard = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  if (loading) return <Loading message="Loading dashboard..." />;
+  const stats = useMemo(() => {
+    const total = projects.length;
+    const proposed = projects.filter(p => p.status === 'proposed').length;
+    const approved = projects.filter(p => p.status === 'approved').length;
+    const inProgress = projects.filter(p => p.status === 'in_progress').length;
+    return [
+      { title: 'Total Projects', value: total, icon: BookOpenIcon, accent: 'brand' },
+      { title: 'Proposed', value: proposed, icon: DocumentCheckIcon, accent: 'blue' },
+      { title: 'Approved', value: approved, icon: CheckCircleIcon, accent: 'green' },
+      { title: 'In Progress', value: inProgress, icon: ClockIcon, accent: 'amber' }
+    ];
+  }, [projects]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[200px] items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
 
   return (
-    <div className="dashboard">
-      <h1>Student Dashboard</h1>
-
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-number">{stats.total}</div>
-          <div className="stat-label">Total Projects</div>
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold text-brand-600">Welcome back</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Student Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Track your proposals, projects and milestones at a glance.
+          </p>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.proposed}</div>
-          <div className="stat-label">Proposed</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.approved}</div>
-          <div className="stat-label">Approved</div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-number">{stats.inProgress}</div>
-          <div className="stat-label">In Progress</div>
+        <div className="flex gap-3">
+          <Link to="/student/projects">
+            <Button variant="secondary">View Projects</Button>
+          </Link>
+          <Link to="/student/new-proposal">
+            <Button>New Proposal</Button>
+          </Link>
         </div>
       </div>
 
-      <div className="dashboard-section">
-        <h2>My Projects</h2>
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {stats.map(stat => (
+          <StatCard key={stat.title} {...stat} />
+        ))}
+      </div>
+
+      <Card title="My Projects" description="Recent activity and statuses" className="space-y-4">
         {projects.length === 0 ? (
-          <div className="empty-state">
-            <p>No projects yet. Create a group and submit a proposal to get started!</p>
-          </div>
+          <EmptyState
+            title="No projects yet"
+            description="Start by submitting a new proposal to kick off your project."
+            action={{ label: 'Submit Proposal', onClick: () => (window.location.href = '/student/new-proposal') }}
+          />
         ) : (
-          <div className="projects-grid">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {projects.map(project => (
-              <div key={project._id} className="project-card">
-                <div className="project-header">
-                  <h3>{project.title}</h3>
-                  <span 
-                    className="project-status"
-                    style={{ backgroundColor: getStatusColor(project.status) }}
-                  >
-                    {getStatusLabel(project.status)}
-                  </span>
-                </div>
-                <p className="project-description">{project.description}</p>
-                <div className="project-meta">
-                  <span>Type: {project.projectType}</span>
-                  <span>Submitted: {formatDate(project.submissionDate)}</span>
-                </div>
-                {project.guideId && (
-                  <div className="project-guide">
-                    <strong>Guide:</strong> {project.guideId.fullName}
+              <Card key={project._id} className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <h3 className="line-clamp-1 text-lg font-semibold text-gray-900 dark:text-gray-100">
+                      {project.title}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-sm text-gray-500 dark:text-gray-400">
+                      {project.description}
+                    </p>
                   </div>
-                )}
-              </div>
+                  <Badge status={project.status} />
+                </div>
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                  <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">{project.projectType}</span>
+                  <span>Submitted: {formatDate(project.submissionDate)}</span>
+                  {project.guideId && <span>Guide: {project.guideId.fullName}</span>}
+                </div>
+                <div className="mt-4 flex items-center justify-between text-sm">
+                  <Link className="text-brand-600 hover:underline" to={`/student/projects/${project._id}`}>
+                    View details
+                  </Link>
+                  <span className="text-gray-500 dark:text-gray-400">{getStatusLabel(project.status)}</span>
+                </div>
+              </Card>
             ))}
           </div>
         )}
-      </div>
+      </Card>
     </div>
   );
 };
