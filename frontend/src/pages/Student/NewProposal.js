@@ -17,7 +17,7 @@ const NewProposal = () => {
 
   const [formData, setFormData] = useState({
     title: '',
-    projectType: 'Minor Project',
+    projectType: 'minor',
     description: '',
     objectives: '',
     technologyStack: '',
@@ -226,8 +226,8 @@ const NewProposal = () => {
               onChange={handleInputChange}
               error={errors.projectType}
             >
-              <option value="Minor Project">Minor Project</option>
-              <option value="Major Project">Major Project</option>
+              <option value="minor">Minor Project</option>
+              <option value="major">Major Project</option>
             </Select>
           </div>
 

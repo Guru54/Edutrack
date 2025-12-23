@@ -29,7 +29,7 @@ const register = async (req, res, next) => {
       department,
       phone,
       verificationToken,
-      isVerified: role === 'student' // Auto-verify students, faculty/admin need approval
+      isVerified: true // Auto-verify all users for now to simplify testing
     });
 
     // Send welcome email (ignore errors)

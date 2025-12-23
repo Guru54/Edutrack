@@ -12,7 +12,7 @@ import RequestLeadershipModal from '../../components/groups/RequestLeadershipMod
 import { groupAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { UserGroupIcon } from '@heroicons/react/24/outline';
+import { UserGroupIcon, UserPlusIcon } from '@heroicons/react/24/outline';
 import { getMemberId, isGroupLeader } from '../../utils/group';
 
 const MemberRow = ({ member, isLeader, onRemove }) => {
@@ -198,7 +198,21 @@ export default function GroupDetails() {
         </div>
       </div>
 
-      <Card title="Members">
+      <Card 
+        title="Members" 
+        headerRight={
+          isLeader && (
+            <Button 
+              size="sm" 
+              variant="secondary" 
+              icon={UserPlusIcon}
+              onClick={() => setModalState((s) => ({ ...s, add: true }))}
+            >
+              Add Member
+            </Button>
+          )
+        }
+      >
         <div className="space-y-3">
           {group.members?.map((member) => (
             <MemberRow

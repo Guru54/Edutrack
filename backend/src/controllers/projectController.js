@@ -1,7 +1,9 @@
 const Project = require('../models/Project');
 const Group = require('../models/Group');
 const User = require('../models/User');
+const File = require('../models/File');
 const Notification = require('../models/Notification');
+const mongoose = require('mongoose');
 const { detectDuplicates } = require('../utils/duplicateDetector');
 const { sendEmail } = require('../config/email');
 const { proposalApprovedEmail, proposalRejectedEmail } = require('../utils/emailTemplates');
@@ -77,7 +79,6 @@ const createProject = async (req, res, next) => {
 
     // Create file record if uploaded
     if (req.file) {
-      const File = require('../models/File');
       await File.create({
         uploadedBy: req.user.id,
         fileName: req.file.filename,
@@ -150,11 +151,21 @@ const getProjects = async (req, res, next) => {
     const projects = await Project.find(filter)
       .populate('groupId', 'groupName members')
       .populate('guideId', 'fullName email department')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Attach proposal files to each project manually
+    const projectsWithFiles = await Promise.all(projects.map(async (p) => {
+      const file = await File.findOne({ projectId: p._id }).lean();
+      return {
+        ...p,
+        proposalFile: file || null
+      };
+    }));
 
     res.json({
       count: projects.length,
-      projects
+      projects: projectsWithFiles
     });
   } catch (error) {
     next(error);
@@ -167,14 +178,34 @@ const getProjects = async (req, res, next) => {
 const getProject = async (req, res, next) => {
   try {
     const project = await Project.findById(req.params.id)
-      .populate('groupId')
-      .populate('guideId', 'fullName email department');
+      .populate({
+        path: 'groupId',
+        populate: {
+          path: 'members.studentId',
+          select: 'fullName email phone department'
+        }
+      })
+      .populate('guideId', 'fullName email department')
+      .lean();
 
     if (!project) {
       return res.status(404).json({ message: 'Project not found' });
     }
 
-    res.json({ project });
+    // Use the File model directly with the project ID
+    const proposalFile = await File.findOne({ 
+      projectId: project._id 
+    }).lean();
+    
+    // Create a fresh object to avoid any Mongoose internal issues
+    const responseData = {
+      ...project,
+      proposalFile: proposalFile || null
+    };
+
+    return res.status(200).json({ 
+      project: responseData
+    });
   } catch (error) {
     next(error);
   }

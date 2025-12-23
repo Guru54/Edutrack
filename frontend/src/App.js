@@ -10,6 +10,7 @@ import FacultyDashboard from './pages/Faculty/Dashboard';
 import AdminDashboard from './pages/Admin/Dashboard';
 import MyProjects from './pages/Student/MyProjects';
 import ProjectDetails from './pages/Student/ProjectDetails';
+import FacultyProjectDetails from './pages/Faculty/ProjectDetails';
 import Milestones from './pages/Student/Milestones';
 import ReviewQueue from './pages/Faculty/ReviewQueue';
 import FacultyMyProjects from './pages/Faculty/MyProjects';
@@ -125,6 +126,11 @@ function App() {
             <Route path="/faculty/projects" element={
               <ProtectedRoute allowedRoles={['faculty']}>
                 <FacultyMyProjects />
+              </ProtectedRoute>
+            } />
+            <Route path="/faculty/projects/:id" element={
+              <ProtectedRoute allowedRoles={['faculty']}>
+                <FacultyProjectDetails />
               </ProtectedRoute>
             } />
             <Route path="/faculty/reviews" element={

@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { milestoneAPI, projectAPI } from '../../services/api';
+import { milestoneAPI, projectAPI, fileAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import Card from '../../components/ui/Card';
 import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
-import { Input, Textarea } from '../../components/ui/Input';
-import { formatDate } from '../../utils/helpers';
+import { formatDate, getProjectTypeLabel } from '../../utils/helpers';
 import Modal from '../../components/ui/Modal';
 import Spinner from '../../components/ui/Spinner';
 
@@ -17,7 +16,6 @@ export default function ProjectDetails() {
   const [project, setProject] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [milestoneForm, setMilestoneForm] = useState({ title: '', dueDate: '', description: '' });
   const [feedbackModal, setFeedbackModal] = useState({ open: false, milestoneId: null });
   const [submissionFile, setSubmissionFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
@@ -28,9 +26,11 @@ export default function ProjectDetails() {
         projectAPI.getById(id),
         milestoneAPI.getByProject(id)
       ]);
+      
       const projectData = projectRes.data?.project || projectRes.data?.data || projectRes.data;
-      const milestoneData = milestonesRes.data?.milestones || milestonesRes.data?.data || [];
       setProject(projectData);
+      
+      const milestoneData = milestonesRes.data?.milestones || milestonesRes.data?.data || [];
       setMilestones(milestoneData);
     } catch (error) {
       showError(error.response?.data?.message || 'Failed to load project');
@@ -43,25 +43,6 @@ export default function ProjectDetails() {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
-
-  const handleCreateMilestone = async (e) => {
-    e.preventDefault();
-    if (!milestoneForm.title || !milestoneForm.dueDate) {
-      showError('Milestone title and due date are required');
-      return;
-    }
-    try {
-      setSubmitting(true);
-      await milestoneAPI.create(id, milestoneForm);
-      showSuccess('Milestone added');
-      setMilestoneForm({ title: '', dueDate: '', description: '' });
-      fetchData();
-    } catch (error) {
-      showError(error.response?.data?.message || 'Unable to add milestone');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleSubmitWork = async () => {
     if (!submissionFile || !feedbackModal.milestoneId) return;
@@ -114,10 +95,52 @@ export default function ProjectDetails() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card title="Summary">
           <div className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-            <div className="flex justify-between"><span>Type</span><span>{project.projectType}</span></div>
+            <div className="flex justify-between">
+              <span>Type</span>
+              <span>{getProjectTypeLabel(project.projectType)}</span>
+            </div>
             <div className="flex justify-between"><span>Academic Year</span><span>{project.academicYear}</span></div>
             <div className="flex justify-between"><span>Semester</span><span>{project.semester}</span></div>
             <div className="flex justify-between"><span>Submitted</span><span>{formatDate(project.submissionDate)}</span></div>
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+              {project.proposalFile ? (
+                <a 
+                  href={fileAPI.download(project.proposalFile._id || project.proposalFile)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full px-4 py-2 text-sm font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-lg transition-colors dark:bg-brand-900/30 dark:text-brand-200"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  View Proposal PDF
+                </a>
+              ) : (
+                <p className="text-xs text-center text-gray-400 italic">No proposal document uploaded</p>
+              )}
+            </div>
+          </div>
+        </Card>
+        <Card title="Team Members">
+          <div className="space-y-3">
+            {project.groupId?.members?.map((member) => (
+              <div key={member.studentId?._id || member.studentId} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-100 text-[10px] font-bold text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
+                    {(member.fullName || 'S')[0].toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-gray-100">{member.fullName}</p>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                      {member.email} {member.studentId?.phone && `• ${member.studentId.phone}`}
+                    </p>
+                  </div>
+                </div>
+                <Badge status={member.role === 'leader' ? 'approved' : 'pending'}>
+                  {member.role}
+                </Badge>
+              </div>
+            ))}
           </div>
         </Card>
         <Card title="Guide">
@@ -132,8 +155,11 @@ export default function ProjectDetails() {
         </Card>
         <Card title="Technology">
           <div className="flex flex-wrap gap-2">
-            {project.technologyStack?.split(',')?.map(tag => (
-              <span key={tag} className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
+            {(Array.isArray(project.technologyStack) 
+              ? project.technologyStack 
+              : (project.technologyStack?.split(',') || [])
+            ).map((tag, idx) => (
+              <span key={`${idx}-${tag}`} className="rounded-full bg-brand-50 px-3 py-1 text-xs font-semibold text-brand-700 dark:bg-brand-900/30 dark:text-brand-200">
                 {tag.trim()}
               </span>
             ))}
@@ -167,46 +193,49 @@ export default function ProjectDetails() {
                   <Badge status={ms.status || 'pending'} />
                 </div>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">{ms.description}</p>
+                
+                {ms.fileIds && ms.fileIds.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {ms.fileIds.map((file) => (
+                      <a
+                        key={file._id}
+                        href={fileAPI.download(file._id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        {file.fileName || 'View Submission'}
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {ms.feedback && (
+                  <div className="mt-3 rounded-lg bg-brand-50 p-2 dark:bg-brand-900/20">
+                    <p className="text-[10px] font-bold text-brand-600 uppercase tracking-wider">Feedback</p>
+                    <p className="text-xs text-gray-700 dark:text-gray-300 italic">"{ms.feedback.feedbackText || ms.feedback}"</p>
+                  </div>
+                )}
+
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
-                  <span>Submissions: {ms.submissions?.length || 0}</span>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => setFeedbackModal({ open: true, milestoneId: ms._id })}
-                  >
-                    Submit work
-                  </Button>
+                  <span>{ms.status === 'pending' ? 'Not submitted' : 'Submitted'}</span>
+                  {ms.status === 'pending' || ms.status === 'needs_revision' ? (
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setFeedbackModal({ open: true, milestoneId: ms._id })}
+                    >
+                      Submit work
+                    </Button>
+                  ) : null}
                 </div>
               </div>
             ))}
             {milestones.length === 0 && <p className="text-sm text-gray-500">No milestones yet.</p>}
           </div>
-
-          <form onSubmit={handleCreateMilestone} className="grid gap-3 md:grid-cols-4">
-            <Input
-              label="Title"
-              name="title"
-              value={milestoneForm.title}
-              onChange={e => setMilestoneForm(prev => ({ ...prev, title: e.target.value }))}
-            />
-            <Input
-              label="Due date"
-              type="date"
-              name="dueDate"
-              value={milestoneForm.dueDate}
-              onChange={e => setMilestoneForm(prev => ({ ...prev, dueDate: e.target.value }))}
-            />
-            <Textarea
-              label="Description"
-              name="description"
-              rows={1}
-              value={milestoneForm.description}
-              onChange={e => setMilestoneForm(prev => ({ ...prev, description: e.target.value }))}
-            />
-            <div className="flex items-end">
-              <Button type="submit" loading={submitting}>Add milestone</Button>
-            </div>
-          </form>
         </div>
       </Card>
 

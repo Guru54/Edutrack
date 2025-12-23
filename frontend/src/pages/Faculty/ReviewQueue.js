@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import { Textarea } from '../../components/ui/Input';
-import { projectAPI } from '../../services/api';
+import { projectAPI, fileAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
-import { formatDate } from '../../utils/helpers';
+import { formatDate, getProjectTypeLabel } from '../../utils/helpers';
 
 export default function ReviewQueue() {
+  const navigate = useNavigate();
   const { showError, showSuccess } = useNotification();
   const [queue, setQueue] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -83,13 +85,37 @@ export default function ReviewQueue() {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{item.title}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">{item.description}</p>
                     <div className="mt-2 flex flex-wrap gap-2 text-xs text-gray-500">
-                      <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">{item.projectType}</span>
+                      <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                        {getProjectTypeLabel(item.projectType)}
+                      </span>
                       <span>Submitted {formatDate(item.submissionDate)}</span>
                     </div>
                   </div>
                   <Badge status={item.status} />
                 </div>
                 <div className="mt-4 flex items-center justify-end gap-2">
+                  {item.proposalFile ? (
+                    <a
+                      href={fileAPI.download(item.proposalFile._id || item.proposalFile)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-brand-700 bg-brand-50 hover:bg-brand-100 rounded-md transition-colors dark:bg-brand-900/30 dark:text-brand-200"
+                    >
+                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      PDF
+                    </a>
+                  ) : (
+                    <span className="text-[10px] text-gray-400 italic">No PDF</span>
+                  )}
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => navigate(`/faculty/projects/${item._id}`)}
+                  >
+                    View Details
+                  </Button>
                   <Button
                     variant="secondary"
                     size="sm"

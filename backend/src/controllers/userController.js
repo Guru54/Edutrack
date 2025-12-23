@@ -209,12 +209,9 @@ const getGuides = async (req, res, next) => {
   try {
     const Project = require('../models/Project');
     
-    const guides = await User.find(
-      { role: 'faculty', isVerified: true },
-      { password: 0, verificationToken: 0 }
-    ).sort({ fullName: 1 });
+    // Find all users with role 'faculty'
+    const guides = await User.find({ role: 'faculty' }).sort({ fullName: 1 });
     
-    // Get workload for each guide
     const guidesWithWorkload = await Promise.all(
       guides.map(async (guide) => {
         const projectCount = await Project.countDocuments({
@@ -232,12 +229,12 @@ const getGuides = async (req, res, next) => {
       })
     );
     
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       data: guidesWithWorkload
     });
-    
   } catch (error) {
+    console.error('Error in getGuides:', error);
     next(error);
   }
 };

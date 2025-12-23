@@ -70,7 +70,12 @@ export const milestoneAPI = {
   getByProject: (projectId) => api.get(`/projects/${projectId}/milestones`),
   create: (projectId, data) => api.post(`/projects/${projectId}/milestones`, data),
   update: (id, data) => api.put(`/milestones/${id}`, data),
-  submit: (id, data) => api.post(`/milestones/${id}/submit`, data),
+  submit: (id, data) => {
+    const headers = data instanceof FormData
+      ? { 'Content-Type': 'multipart/form-data' }
+      : { 'Content-Type': 'application/json' };
+    return api.post(`/milestones/${id}/submit`, data, { headers });
+  },
   provideFeedback: (id, data) => api.post(`/milestones/${id}/feedback`, data),
   getFeedback: (id) => api.get(`/milestones/${id}/feedback`)
 };
@@ -125,7 +130,10 @@ export const fileAPI = {
   upload: (formData) => api.post('/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  download: (id) => api.get(`/files/${id}`, { responseType: 'blob' })
+  download: (id) => {
+    const token = localStorage.getItem('token');
+    return `${API_URL}/files/${id}${token ? `?token=${token}` : ''}`;
+  }
 };
 
 export default api;

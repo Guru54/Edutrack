@@ -11,6 +11,7 @@ const {
 const { protect } = require('../middleware/auth');
 const authorize = require('../middleware/roleCheck');
 const { milestoneValidation, validate } = require('../utils/validators');
+const { uploadProject } = require('../middleware/upload');
 
 // Routes for /api/projects/:id/milestones
 router.route('/')
@@ -19,7 +20,7 @@ router.route('/')
 
 // Routes for /api/milestones/:id
 router.put('/:id', protect, authorize('faculty', 'admin'), updateMilestone);
-router.post('/:id/submit', protect, authorize('student'), submitMilestone);
+router.post('/:id/submit', protect, authorize('student'), uploadProject.single('file'), submitMilestone);
 router.post('/:id/feedback', protect, authorize('faculty', 'admin'), provideFeedback);
 router.get('/:id/feedback', protect, getFeedback);
 

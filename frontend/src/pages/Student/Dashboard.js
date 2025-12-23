@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { projectAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
-import { formatDate, getStatusLabel } from '../../utils/helpers';
+import { formatDate, getStatusLabel, getProjectTypeLabel } from '../../utils/helpers';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
@@ -124,7 +124,9 @@ const StudentDashboard = () => {
                   <Badge status={project.status} />
                 </div>
                 <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-                  <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">{project.projectType}</span>
+                  <span className="rounded-full bg-gray-100 px-2 py-1 dark:bg-gray-800">
+                    {getProjectTypeLabel(project.projectType)}
+                  </span>
                   <span>Submitted: {formatDate(project.submissionDate)}</span>
                   {project.guideId && <span>Guide: {project.guideId.fullName}</span>}
                 </div>

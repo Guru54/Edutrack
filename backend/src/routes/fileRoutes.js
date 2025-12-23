@@ -56,11 +56,18 @@ router.get('/files/:id', protect, async (req, res, next) => {
     }
 
     // Check if file exists
-    if (!fs.existsSync(file.filePath)) {
+    // The path in DB might be relative to project root or absolute
+    // We try to resolve it relative to the current working directory
+    const absolutePath = path.isAbsolute(file.filePath) 
+      ? file.filePath 
+      : path.join(process.cwd(), file.filePath);
+
+    if (!fs.existsSync(absolutePath)) {
+      console.error('File not found at path:', absolutePath);
       return res.status(404).json({ message: 'File not found on server' });
     }
 
-    res.download(file.filePath, file.fileName);
+    res.download(absolutePath, file.fileName);
   } catch (error) {
     next(error);
   }

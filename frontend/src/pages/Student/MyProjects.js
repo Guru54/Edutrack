@@ -7,7 +7,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import DataTable from '../../components/ui/DataTable';
 import { Select, Input } from '../../components/ui/Input';
-import { formatDate, getStatusLabel } from '../../utils/helpers';
+import { formatDate, getStatusLabel, getProjectTypeLabel } from '../../utils/helpers';
 
 const statusOptions = [
   { value: '', label: 'All statuses' },
@@ -65,7 +65,11 @@ export default function MyProjects() {
       {
         header: 'Type',
         accessorKey: 'projectType',
-        cell: info => <span className="rounded-full bg-gray-100 px-2 py-1 text-xs dark:bg-gray-800">{info.getValue()}</span>
+        cell: info => (
+          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs dark:bg-gray-800">
+            {getProjectTypeLabel(info.getValue())}
+          </span>
+        )
       },
       {
         header: 'Status',
@@ -108,8 +112,8 @@ export default function MyProjects() {
           </Select>
           <Select value={typeFilter} onChange={e => setTypeFilter(e.target.value)}>
             <option value="">All types</option>
-            <option value="Minor Project">Minor Project</option>
-            <option value="Major Project">Major Project</option>
+            <option value="minor">Minor Project</option>
+            <option value="major">Major Project</option>
           </Select>
           <div className="flex items-center justify-end">
             <span className="text-sm text-gray-500 dark:text-gray-400">{filtered.length} projects</span>

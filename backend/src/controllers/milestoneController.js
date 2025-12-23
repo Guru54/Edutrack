@@ -3,6 +3,7 @@ const Feedback = require('../models/Feedback');
 const Project = require('../models/Project');
 const Group = require('../models/Group');
 const User = require('../models/User');
+const File = require('../models/File');
 const Notification = require('../models/Notification');
 const { sendEmail } = require('../config/email');
 const { feedbackReceivedEmail } = require('../utils/emailTemplates');
@@ -62,11 +63,35 @@ const getMilestones = async (req, res, next) => {
     const milestones = await Milestone.find({ projectId })
       .populate('submittedBy', 'fullName email')
       .populate('createdBy', 'fullName')
-      .sort({ dueDate: 1 });
+      .populate('fileIds')
+      .sort({ dueDate: 1 })
+      .lean();
+
+    // Fetch any files linked to these milestones (fallback if fileIds not set)
+    const milestoneIds = milestones.map((m) => m._id);
+    const files = await File.find({ milestoneId: { $in: milestoneIds } }).lean();
+    const filesByMilestone = files.reduce((acc, file) => {
+      const key = file.milestoneId.toString();
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(file);
+      return acc;
+    }, {});
+
+    // Fetch feedback for each milestone
+    const milestonesWithFeedback = await Promise.all(milestones.map(async (m) => {
+      const feedback = await Feedback.findOne({ milestoneId: m._id })
+        .populate('givenBy', 'fullName')
+        .sort({ createdAt: -1 })
+        .lean();
+
+      const mergedFiles = (m.fileIds && m.fileIds.length ? m.fileIds : filesByMilestone[m._id.toString()]) || [];
+
+      return { ...m, feedback, fileIds: mergedFiles };
+    }));
 
     res.json({
-      count: milestones.length,
-      milestones
+      count: milestonesWithFeedback.length,
+      milestones: milestonesWithFeedback
     });
   } catch (error) {
     next(error);
@@ -124,7 +149,24 @@ const submitMilestone = async (req, res, next) => {
     milestone.submissionDate = Date.now();
     milestone.submittedBy = req.user.id;
     milestone.submissionText = submissionText;
-    if (fileIds) milestone.fileIds = fileIds;
+    
+    // Handle file upload if present
+    if (req.file) {
+      const newFile = await File.create({
+        uploadedBy: req.user.id,
+        fileName: req.file.filename,
+        filePath: req.file.path,
+        fileType: req.file.mimetype,
+        fileSize: req.file.size,
+        projectId: project._id,
+        milestoneId: milestone._id
+      });
+      
+      if (!milestone.fileIds) milestone.fileIds = [];
+      milestone.fileIds.push(newFile._id);
+    } else if (fileIds) {
+      milestone.fileIds = fileIds;
+    }
 
     await milestone.save();
 

@@ -49,6 +49,14 @@ export const formatFileSize = (bytes) => {
   return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
 };
 
+export const getProjectTypeLabel = (type) => {
+  const types = {
+    minor: 'Minor Project',
+    major: 'Major Project'
+  };
+  return types[type] || type;
+};
+
 export const truncateText = (text, maxLength = 100) => {
   if (!text || text.length <= maxLength) return text;
   return text.substring(0, maxLength) + '...';

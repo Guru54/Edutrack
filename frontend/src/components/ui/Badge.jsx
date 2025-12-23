@@ -8,7 +8,9 @@ const statusStyles = {
   in_progress: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-100',
   rejected: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200',
   completed: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-100',
-  pending: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-100'
+  pending: 'bg-gray-100 text-gray-700 dark:bg-gray-800/50 dark:text-gray-100',
+  submitted: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-200',
+  needs_revision: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200'
 };
 
 export default function Badge({ status = 'pending', children, className }) {

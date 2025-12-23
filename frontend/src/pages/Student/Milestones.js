@@ -54,7 +54,7 @@ export default function Milestones() {
     }
     const data = new FormData();
     data.append('file', submission.file);
-    data.append('notes', submission.notes);
+    if (submission.notes) data.append('submissionText', submission.notes);
     try {
       setLoading(true);
       await milestoneAPI.submit(selectedMilestone, data);

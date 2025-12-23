@@ -64,7 +64,17 @@ const projectSchema = new mongoose.Schema({
     type: String
   }
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for proposal file
+projectSchema.virtual('proposalFile', {
+  ref: 'File',
+  localField: '_id',
+  foreignField: 'projectId',
+  justOne: true
 });
 
 // Index for duplicate detection

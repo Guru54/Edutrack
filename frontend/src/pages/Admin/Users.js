@@ -32,31 +32,48 @@ export default function Users() {
       .filter(u => (u.fullName || u.email || '').toLowerCase().includes(search.toLowerCase()));
   }, [users, role, search]);
 
-  const toggleUser = async (user) => {
+  const handleVerify = async (userId) => {
     try {
-      await userAPI.update(user._id, { isActive: !user.isActive });
-      showSuccess(`User ${!user.isActive ? 'enabled' : 'disabled'}`);
+      await userAPI.verify(userId);
+      showSuccess('User verified successfully');
       load();
     } catch (error) {
-      showError(error.response?.data?.message || 'Unable to update user');
+      showError(error.response?.data?.message || 'Unable to verify user');
     }
   };
 
   const columns = [
     { header: 'Name', accessorKey: 'fullName' },
     { header: 'Email', accessorKey: 'email' },
-    { header: 'Role', accessorKey: 'role', cell: info => <Badge status="pending">{info.getValue()}</Badge> },
+    { 
+      header: 'Role', 
+      accessorKey: 'role', 
+      cell: info => (
+        <Badge status={info.getValue() === 'admin' ? 'approved' : 'pending'}>
+          {info.getValue()}
+        </Badge>
+      ) 
+    },
     {
       header: 'Status',
-      accessorKey: 'isActive',
-      cell: info => (info.getValue() === false ? 'Disabled' : 'Active')
+      accessorKey: 'isVerified',
+      cell: info => (
+        <Badge status={info.getValue() ? 'approved' : 'rejected'}>
+          {info.getValue() ? 'Verified' : 'Pending'}
+        </Badge>
+      )
     },
     {
       header: 'Actions',
       cell: info => (
-        <Button size="sm" variant="secondary" onClick={() => toggleUser(info.row.original)}>
-          {info.row.original.isActive === false ? 'Enable' : 'Disable'}
-        </Button>
+        <div className="flex gap-2">
+          {!info.row.original.isVerified && (
+            <Button size="sm" onClick={() => handleVerify(info.row.original._id)}>
+              Verify
+            </Button>
+          )}
+          {/* You can add more actions here like Delete or Edit */}
+        </div>
       )
     }
   ];

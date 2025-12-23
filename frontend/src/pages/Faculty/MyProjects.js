@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import DataTable from '../../components/ui/DataTable';
 import { Select, Input } from '../../components/ui/Input';
 import Badge from '../../components/ui/Badge';
-import { formatDate, getStatusLabel } from '../../utils/helpers';
+import { formatDate, getStatusLabel, getProjectTypeLabel } from '../../utils/helpers';
 import { projectAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 
@@ -36,9 +37,17 @@ export default function FacultyMyProjects() {
       {
         header: 'Title',
         accessorKey: 'title',
-        cell: info => info.getValue()
+        cell: info => (
+          <Link to={`/faculty/projects/${info.row.original._id}`} className="font-semibold text-brand-600 hover:underline">
+            {info.getValue()}
+          </Link>
+        )
       },
-      { header: 'Type', accessorKey: 'projectType' },
+      { 
+        header: 'Type', 
+        accessorKey: 'projectType',
+        cell: info => getProjectTypeLabel(info.getValue())
+      },
       { header: 'Status', accessorKey: 'status', cell: info => <Badge status={info.getValue()}>{getStatusLabel(info.getValue())}</Badge> },
       {
         header: 'Submitted',

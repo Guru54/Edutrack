@@ -4,7 +4,7 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import { Input, Textarea } from '../../components/ui/Input';
-import { milestoneAPI, projectAPI } from '../../services/api';
+import { milestoneAPI, projectAPI, fileAPI } from '../../services/api';
 import { useNotification } from '../../contexts/NotificationContext';
 import { formatDate } from '../../utils/helpers';
 
@@ -12,7 +12,7 @@ export default function Reviews() {
   const { showError, showSuccess } = useNotification();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [feedback, setFeedback] = useState({ open: false, milestoneId: null, comment: '', score: '' });
+  const [feedback, setFeedback] = useState({ open: false, milestoneId: null, comment: '', score: '', status: 'approved' });
 
   const load = useCallback(async () => {
     try {
@@ -41,9 +41,13 @@ export default function Reviews() {
       return;
     }
     try {
-      await milestoneAPI.provideFeedback(feedback.milestoneId, { comment: feedback.comment, score: feedback.score ? Number(feedback.score) : null });
+      await milestoneAPI.provideFeedback(feedback.milestoneId, {
+        feedbackText: feedback.comment,
+        marks: feedback.score ? Number(feedback.score) : undefined,
+        status: feedback.status
+      });
       showSuccess('Feedback submitted');
-      setFeedback({ open: false, milestoneId: null, comment: '', score: '' });
+      setFeedback({ open: false, milestoneId: null, comment: '', score: '', status: 'approved' });
       load();
     } catch (error) {
       showError(error.response?.data?.message || 'Unable to submit feedback');
@@ -76,12 +80,32 @@ export default function Reviews() {
                 </div>
                 <div className="mt-3 flex items-center justify-between text-xs text-gray-500">
                   <span>Due {formatDate(ms.dueDate)}</span>
-                  <span>{ms.submissions?.length || 0} submissions</span>
+                  <span>{ms.submissionDate ? 'Submitted' : 'Awaiting submission'}</span>
                 </div>
+
+                {ms.fileIds && ms.fileIds.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    {ms.fileIds.map((file) => (
+                      <a
+                        key={file._id || file}
+                        href={fileAPI.download(file._id || file)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-xs font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                        </svg>
+                        {file.fileName || 'Download submission'}
+                      </a>
+                    ))}
+                  </div>
+                )}
+
                 <div className="mt-3 flex justify-end">
                   <Button
                     size="sm"
-                    onClick={() => setFeedback({ open: true, milestoneId: ms._id, comment: '', score: '' })}
+                    onClick={() => setFeedback({ open: true, milestoneId: ms._id, comment: '', score: '', status: 'approved' })}
                   >
                     Give feedback
                   </Button>
@@ -113,6 +137,17 @@ export default function Reviews() {
             value={feedback.score}
             onChange={e => setFeedback(prev => ({ ...prev, score: e.target.value }))}
           />
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+            <select
+              className="w-full rounded-md border-gray-300 shadow-sm focus:border-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700"
+              value={feedback.status}
+              onChange={e => setFeedback(prev => ({ ...prev, status: e.target.value }))}
+            >
+              <option value="approved">Approve</option>
+              <option value="needs_revision">Needs Revision</option>
+            </select>
+          </div>
         </div>
       </Modal>
     </div>
