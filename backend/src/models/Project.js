@@ -36,6 +36,10 @@ const projectSchema = new mongoose.Schema({
   expectedOutcomes: {
     type: String
   },
+  submittedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
   status: {
     type: String,
     enum: ['proposed', 'approved', 'in_progress', 'completed', 'rejected'],

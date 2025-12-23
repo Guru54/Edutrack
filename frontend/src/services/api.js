@@ -89,7 +89,11 @@ export const userAPI = {
 export const groupAPI = {
   create: (data) => api.post('/groups', data),
   getById: (id) => api.get(`/groups/${id}`),
-  update: (id, data) => api.put(`/groups/${id}`, data)
+  addMember: (id, payload) => api.post(`/groups/${id}/add-member`, payload),
+  removeMember: (id, payload) => api.post(`/groups/${id}/remove-member`, payload),
+  leave: (id) => api.post(`/groups/${id}/leave`),
+  transferLeader: (id, payload) => api.patch(`/groups/${id}/transfer-leader`, payload),
+  requestTransfer: (id, payload) => api.post(`/groups/${id}/request-transfer`, payload)
 };
 
 // Allocation API

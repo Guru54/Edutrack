@@ -7,10 +7,13 @@ import Button from '../../components/ui/Button';
 import { Input, Select, Textarea } from '../../components/ui/Input';
 import Spinner from '../../components/ui/Spinner';
 import { CloudArrowUpIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../../contexts/AuthContext';
+import { isGroupLeader } from '../../utils/group';
 
 const NewProposal = () => {
   const navigate = useNavigate();
   const { showSuccess, showError } = useNotification();
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -21,12 +24,15 @@ const NewProposal = () => {
     expectedOutcomes: '',
     academicYear: '2024-25',
     semester: '',
-    guideId: ''
+    guideId: '',
+    groupId: ''
   });
   const [file, setFile] = useState(null);
   const [guides, setGuides] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [guidesLoading, setGuidesLoading] = useState(true);
+  const [groupsLoading, setGroupsLoading] = useState(true);
   const [errors, setErrors] = useState({});
 
   const fetchGuides = useCallback(async () => {
@@ -44,6 +50,33 @@ const NewProposal = () => {
   useEffect(() => {
     fetchGuides();
   }, [fetchGuides]);
+
+  const fetchGroups = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      setGroupsLoading(true);
+      const res = await userAPI.getUserGroups(user.id);
+      const fetched = res.data.groups || [];
+      setGroups(fetched);
+      if (fetched.length > 0) {
+        setFormData((prev) => {
+          if (prev.groupId) return prev;
+          return { ...prev, groupId: fetched[0]._id };
+        });
+      }
+    } catch (error) {
+      showError(error.response?.data?.message || 'Failed to fetch groups');
+    } finally {
+      setGroupsLoading(false);
+    }
+  }, [showError, user]);
+
+  useEffect(() => {
+    fetchGroups();
+  }, [fetchGroups]);
+
+  const selectedGroup = groups.find((g) => g._id === formData.groupId);
+  const isLeader = isGroupLeader(selectedGroup, user?.id);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -89,6 +122,10 @@ const NewProposal = () => {
     if (!formData.academicYear) newErrors.academicYear = 'Academic year is required';
     if (!formData.semester) newErrors.semester = 'Semester is required';
     if (!formData.guideId) newErrors.guideId = 'Please select a guide';
+    if (!formData.groupId) newErrors.groupId = 'Please select a group';
+    if (formData.groupId && selectedGroup && !isLeader) {
+      newErrors.groupId = 'Only the group leader can submit a proposal';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -158,6 +195,30 @@ const NewProposal = () => {
               onChange={handleInputChange}
               error={errors.title}
             />
+            <Select
+              label="Group"
+              name="groupId"
+              value={formData.groupId}
+              onChange={handleInputChange}
+              error={errors.groupId}
+              disabled={groupsLoading}
+            >
+              <option value="">{groupsLoading ? 'Loading groups...' : 'Select a group'}</option>
+              {groups.map(group => (
+                <option key={group._id} value={group._id}>
+                  {group.groupName} ({group.members?.length || 0} members)
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          {selectedGroup && !isLeader && (
+            <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Only the group leader can submit a proposal. Please ask your leader to submit.
+            </div>
+          )}
+
+          <div className="grid gap-4 md:grid-cols-2">
             <Select
               label="Project Type"
               name="projectType"
@@ -277,7 +338,7 @@ const NewProposal = () => {
             <Button type="button" variant="secondary" onClick={() => navigate('/student/dashboard')} disabled={loading}>
               Cancel
             </Button>
-            <Button type="submit" loading={loading}>
+            <Button type="submit" loading={loading} disabled={loading || (selectedGroup && !isLeader)}>
               {loading ? 'Submitting...' : 'Submit Proposal'}
             </Button>
           </div>

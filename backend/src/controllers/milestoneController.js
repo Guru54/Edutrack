@@ -137,6 +137,16 @@ const submitMilestone = async (req, res, next) => {
       });
     }
 
+    // Notify group leader
+    const leader = group.members.find(member => member.role === 'leader');
+    if (leader && leader.studentId.toString() !== req.user.id) {
+      await Notification.create({
+        userId: leader.studentId,
+        message: `${req.user.fullName || 'A member'} submitted milestone "${milestone.title}"`,
+        type: 'info'
+      });
+    }
+
     res.json({
       message: 'Milestone submitted successfully',
       milestone
